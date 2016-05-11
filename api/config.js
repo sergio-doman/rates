@@ -4,10 +4,14 @@ var config = {
     "PORT": process.env.PORT || 8080
   },
 
+  // "filterPointsTimeout": 30,
+  "updateIntervalSec": 1,
+
   "source": {
     "url": "https://ratesjson.fxcm.com/DataDisplayer?symbols=EURUSD,USDJPY,GBPUSD,AUDUSD,USDCAD&callback=getRates&since=",
     "functionName": "getRates",
-    "roundAccuracy": 6
+    "roundAccuracy": 6,
+    "expireSec": 60,  // 30 * 60  // When new point will be deleted from redis
   },
 
   "RESTIFY": {
@@ -23,7 +27,7 @@ var config = {
     "APP": {
       "host": "localhost",
       "port": "6379",
-      "db": 1
+      "db": 0
     }
   },
 

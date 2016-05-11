@@ -14,5 +14,6 @@ module.exports = function(app, redis, emitter) {
   });
 
   app.get('/update', pointsCtrl.update);
+  app.get('/get/:name', pointsCtrl.get);
 
 };

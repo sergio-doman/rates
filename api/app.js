@@ -15,8 +15,10 @@ var emitter = require('socket.io-emitter')(config.REDIS.IO);
 // Redis
 var redis = require('redis').createClient(config.REDIS.APP);
 
+
 // Error handler  // Uncomment it !!
 // process.on('uncaughtException', function(ex) {
+//  log to winston
 //  console.log('UncaughtException:', ex);
 // });
 
@@ -45,3 +47,6 @@ app.listen(config.service.PORT);
 
 require('./routes')(app, redis, emitter);
 
+
+var pointsSrv = require('./services/pointsSrv')(redis);
+pointsSrv.initUpdates();
