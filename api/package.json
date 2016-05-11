@@ -1,0 +1,29 @@
+{
+  "name": "Rates",
+  "version": "1.0.0",
+  "description": "Implementation of rates update application",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergio-doman/rates.git"
+  },
+  "author": "Sergiy Domanitskiy",
+  "license": "",
+  "homepage": "https://github.com/sergio-doman/rates.git",
+  "dependencies": {
+    "async": "^1.5.2",
+    "crypto": "0.0.3",
+    "dejsonp": "0.0.2",
+    "later": "^1.2.0",
+    "lodash": "^4.6.1",
+    "node-fetch": "^1.5.2",
+    "redis": "^2.4.2",
+    "restify": "^4.0.4",
+    "socket.io": "^1.4.5",
+    "socket.io-emitter": "^1.0.0",
+    "socket.io-redis": "^1.0.0"
+  }
+}
