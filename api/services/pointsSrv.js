@@ -38,16 +38,16 @@ var Service = function (redis) {
 
     // Get latest points by asset name
     // TODO: Save to redis for 1 sec
-    list: function (name, cb) {
-      var asset = _.find(config.assets, function(o) { return name == o.name; });
+    list: function (id, cb) {
+      var asset = _.find(config.assets, function(a) { return id == a.id; });
       if (!asset) {
-        cb('Invalid name');
+        cb('Invalid id');
         return;
       }
 
       var minUt = String(this.ut() - config.pointsFilterSec);
       var diffLen = String(config.pointsFilterSec).length;
-      var keyFilter = 'point_' + name + '_' + (minUt).substr(0, minUt.length - diffLen)  + '*';
+      var keyFilter = 'point_' + asset.name + '_' + (minUt).substr(0, minUt.length - diffLen)  + '*';
       redis.keys(keyFilter, function (err, keys) {
           if (err) {
             cb(err);
@@ -71,7 +71,7 @@ var Service = function (redis) {
               var points = [];
               _(res).forEach(function(point) {
                 var p = JSON.parse(point);
-                p.assetName = name;
+                p.assetName = asset.name;
                 p.assetId = asset.id;
                 points.push(p);
               });

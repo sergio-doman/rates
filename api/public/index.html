@@ -1,34 +1,54 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script src="socket.io-1.4.5.js"></script>
   </head>
 
   <body>
+
     <script>
+      function myApp() {
 
-       document.addEventListener("DOMContentLoaded", function(event) {
-        console.log('DOMContentLoaded');
+        if ('function' != typeof io) {
+          console.log('Socket.io unavailable')
+          return;
+        }
 
-        var socket = io();
+        this.assets = [];
+        this.assetId = null;
+        this.socket = io();
+        this.history = [];
 
-        socket.on('connect', function() {
-          console.log('connected');
-        });
+        this.socket.on('assets', function(message) {
+          this.assets = message.assets;
+          console.log('assets', message);
+        }.bind(this));
 
-        socket.on('event', function(data) {
-          console.log('event: ', data);
-        });
+        this.socket.on('asset_history', function(message) {
+          this.history = message.points;
+          console.log('asset_history', message);
+        }.bind(this));
 
-        socket.on('disconnect', function() {
-          console.log('disconnect');
-        });
+        this.getAssetsList = function () {
+          this.socket.emit('assets');
+        }.bind(this);
 
+        this.subscribeTo = function (assetId) {
+          this.history = [];
+          this.socket.emit('subscribe', {message: {assetId: assetId}});
+        }
 
+        this.getAssetsList();
+        this.subscribeTo(1);
+
+      }
+
+      document.addEventListener("DOMContentLoaded", function(event) {
+        window.myapp = new myApp();
       });
 
 
     </script>
 
-    <p>index.html</p>
   </body>
 </html>
