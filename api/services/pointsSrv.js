@@ -13,10 +13,15 @@ var later = require('later');
 var Service = function (redis) {
   var restify = require('restify');
 
+  var assetsMapping = {};
+  _(config.assets).forEach(function(asset, index) {
+    assetsMapping[asset.name] = asset.id;
+  });
+
   return {
 
     updateTimer: null,
-
+    assetsMapping: assetsMapping,
 
     // Get unixtime (seconds)
     ut: function () {
@@ -47,7 +52,7 @@ var Service = function (redis) {
 
       var minUt = String(this.ut() - config.pointsFilterSec);
       var diffLen = String(config.pointsFilterSec).length;
-      var keyFilter = 'point_' + asset.name + '_' + (minUt).substr(0, minUt.length - diffLen)  + '*';
+      var keyFilter = 'point_' + asset.id + '_' + (minUt).substr(0, minUt.length - diffLen)  + '*';
       redis.keys(keyFilter, function (err, keys) {
           if (err) {
             cb(err);
@@ -62,24 +67,29 @@ var Service = function (redis) {
             }
           });
 
-          redis.mget(list, function (err, res) {
-            if (err) {
-              cb(err);
-            }
-            else {
+          if (list.length > 0) {
+            redis.mget(list, function (err, res) {
+              if (err) {
+                cb(err);
+              }
+              else {
 
-              var points = [];
-              _(res).forEach(function(point) {
-                var p = JSON.parse(point);
-                p.assetName = asset.name;
-                p.assetId = asset.id;
-                points.push(p);
-              });
+                var points = [];
+                _(res).forEach(function(point) {
+                  var p = JSON.parse(point);
+                  p.assetName = asset.name;
+                  p.assetId = asset.id;
+                  points.push(p);
+                });
 
-              points = _.sortBy(points, function(p) { return p.time; });
-              cb(null, points);
-            }
-          });
+                points = _.sortBy(points, function(p) { return p.time; });
+                cb(null, points);
+              }
+            });
+          }
+          else {
+            cb(null, []);
+          }
         }
       });
     },
@@ -89,11 +99,15 @@ var Service = function (redis) {
     update: function (cb) {
       this.parse(function (err, rates, ut) {
         if (!err && rates) {
+
           _(rates).forEach(function(value, name) {
-            var pointKey = "point_" + name + "_" + ut;
-            var pointValue = {time: ut, value: value};
-            redis.set(pointKey, JSON.stringify(pointValue));
-            redis.expire(pointKey, config.source.expireSec);
+            if (assetsMapping.hasOwnProperty(name)) {
+              var assetId = assetsMapping[name];
+              var pointKey = "point_" + assetId + "_" + ut;
+              var pointValue = {time: ut, value: value};
+              redis.set(pointKey, JSON.stringify(pointValue));
+              redis.expire(pointKey, config.source.expireSec);
+            }
           });
         }
 

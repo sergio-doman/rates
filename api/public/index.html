@@ -41,6 +41,10 @@
         this.getAssetsList();
         this.subscribeTo(1);
 
+        setTimeout(function() {
+          this.subscribeTo(2);
+        }.bind(this), 5000);
+
       }
 
       document.addEventListener("DOMContentLoaded", function(event) {

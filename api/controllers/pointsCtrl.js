@@ -13,10 +13,10 @@ var Controller = function (redis) {
   return {
 
     get: function (req, res, next) {
+      var assetId = req.params.id;
 
-      pointsSrv.list(req.params.name, function (err, list) {
-
-        res.send({err: err, list: list, name: req.params.name});
+      pointsSrv.list(assetId, function (err, points) {
+        res.send({err: err, points: points, assetId: assetId});
 
         return next();
       });

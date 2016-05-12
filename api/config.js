@@ -22,12 +22,13 @@ var config = {
   "REDIS": {
     "IO": {
       "host": "localhost",
-      "port": "6379"
+      "port": "6379",
+      "db": 1
     },
     "APP": {
       "host": "localhost",
       "port": "6379",
-      "db": 1
+      "db": 2
     }
   },
 
