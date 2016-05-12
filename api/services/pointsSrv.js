@@ -10,7 +10,7 @@ var fetch = require('node-fetch');
 var dejsonp = require('dejsonp');
 var later = require('later');
 
-var Service = function (redis) {
+var Service = function (redis, emitter) {
   var restify = require('restify');
 
   var assetsMapping = {};
@@ -107,6 +107,17 @@ var Service = function (redis) {
               var pointValue = {time: ut, value: value};
               redis.set(pointKey, JSON.stringify(pointValue));
               redis.expire(pointKey, config.source.expireSec);
+
+              // Send broadcast update
+              var pointMessage = {
+                message: {
+                  time: ut,
+                  value: value,
+                  assetName: name,
+                  assetId: assetId
+                }
+              };
+              emitter.to('asset_' + assetId).emit('point', pointMessage);
             }
           });
         }

@@ -24,6 +24,11 @@
           console.log('assets', message);
         }.bind(this));
 
+        this.socket.on('point', function(message) {
+
+          console.log('point', message);
+        }.bind(this));
+
         this.socket.on('asset_history', function(message) {
           this.history = message.points;
           console.log('asset_history', message);
@@ -43,7 +48,7 @@
 
         setTimeout(function() {
           this.subscribeTo(2);
-        }.bind(this), 5000);
+        }.bind(this), 10000);
 
       }
 

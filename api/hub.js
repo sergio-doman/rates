@@ -8,7 +8,7 @@ var _ = require('lodash');
 var config = require('./config');
 
 module.exports = function (io, redis, emitter) {
-  var pointsSrv = require('./services/pointsSrv')(redis);
+  var pointsSrv = require('./services/pointsSrv')(redis, emitter);
 
   io.on('connection', function (socket) {
     socket.assetId = null;
@@ -21,7 +21,6 @@ module.exports = function (io, redis, emitter) {
       console.log('assets', message);
       socket.emit('assets', message);
     });
-
 
     // Subscribe to channel
     socket.on('subscribe', function (data) {

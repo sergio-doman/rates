@@ -4,14 +4,14 @@ var config = {
     "PORT": process.env.PORT || 8080
   },
 
-  "pointsFilterSec": 30, // How many old points to show
+  "pointsFilterSec": 5 * 60, // How many old points to show
   "updateIntervalSec": 1,
 
   "source": {
     "url": "https://ratesjson.fxcm.com/DataDisplayer?symbols=EURUSD,USDJPY,GBPUSD,AUDUSD,USDCAD&callback=getRates&since=",
     "functionName": "getRates",
     "roundAccuracy": 6,
-    "expireSec": 60,  // 30 * 60  // When new point will be deleted from redis
+    "expireSec": 30 * 60,  // 30 * 60  // When new point will be deleted from redis
   },
 
   "RESTIFY": {

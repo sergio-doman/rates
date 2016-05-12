@@ -7,9 +7,9 @@
 
 var _ = require('lodash');
 
-var Controller = function (redis) {
+var Controller = function (redis, emitter) {
 
-  var pointsSrv = require('../services/pointsSrv')(redis);
+  var pointsSrv = require('../services/pointsSrv')(redis, emitter);
   return {
 
     get: function (req, res, next) {

@@ -8,17 +8,14 @@ var config = require('./config');
 var restify = require('restify');
 var app = restify.createServer(config.RESTIFY);
 
-var emitter = null;
-
 // Redis
 var redis = require('redis').createClient(config.REDIS.APP);
 
-
-// Error handler  // Uncomment it !!
-// process.on('uncaughtException', function(ex) {
-//  log to winston
-//  console.log('UncaughtException:', ex);
-// });
+// Error handler
+// TODO: Log to winston
+process.on('uncaughtException', function(ex) {
+  console.log('UncaughtException:', ex);
+});
 
 // Restify
 app.pre(restify.pre.userAgentConnection()); // Allow curl requests
@@ -56,10 +53,9 @@ require('./routes')(app, redis, emitter);
 
 // Share static files
 app.get(/\/public\/?.*/, restify.serveStatic({
-    directory: __dirname
+  directory: __dirname
 }));
 
-
-
-var pointsSrv = require('./services/pointsSrv')(redis);
+// Start updates
+var pointsSrv = require('./services/pointsSrv')(redis, emitter);
 pointsSrv.initUpdates();
