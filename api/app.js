@@ -7,10 +7,12 @@
 var config = require('./config');
 var restify = require('restify');
 var app = restify.createServer(config.RESTIFY);
-var io = require('socket.io')(app);
-var ioredis = require('socket.io-redis');
-io.adapter(ioredis(config.REDIS.IO));
-var emitter = require('socket.io-emitter')(config.REDIS.IO);
+
+// io.set('origins', '*192.168.1.105:8080');
+// var ioredis = require('socket.io-redis');
+//io.adapter(ioredis(config.REDIS.IO));
+// var emitter = require('socket.io-emitter')(config.REDIS.IO);
+var emitter = null;
 
 // Redis
 var redis = require('redis').createClient(config.REDIS.APP);
@@ -43,10 +45,31 @@ app.use(restify.acceptParser(app.acceptable));
 app.use(restify.queryParser());
 app.use(restify.bodyParser());
 app.use(restify.authorizationParser());
-app.listen(config.service.PORT);
+app.listen(config.service.PORT, function () {
+   console.log('Service started at port', config.service.PORT);
+});
 
 require('./routes')(app, redis, emitter);
 
+// Share static files
+app.get(/\/public\/?.*/, restify.serveStatic({
+    directory: __dirname
+}));
+
+/*
+var io = require('socket.io')(app);
+io.on('connection', function (socket) {
+  console.log('connection');
+
+  socket.on('new message', function (data) {
+    // we tell the client to execute 'new message'
+    socket.broadcast.emit('new message', {
+      username: socket.username,
+      message: data
+    });
+  });
+});
+*/
 
 var pointsSrv = require('./services/pointsSrv')(redis);
 pointsSrv.initUpdates();

@@ -13,11 +13,10 @@ var Controller = function (redis) {
   return {
 
     get: function (req, res, next) {
-      // res.send({name: req.params.name});
 
-      pointsSrv.list(req.params.name, function (err, list) {
+      pointsSrv.list(req.params.name, function (err, list, list2) {
 
-        res.send({err: err, list: list});
+        res.send({err: err, list: list, name: req.params.name, list2: list2});
 
         return next();
       });

@@ -13,6 +13,11 @@ module.exports = function(app, redis, emitter) {
     return next();
   });
 
+  app.post('/socket.io', function (req, res, next) {
+    res.send(200);
+    return next();
+  });
+
   app.get('/update', pointsCtrl.update);
   app.get('/get/:name', pointsCtrl.get);
 

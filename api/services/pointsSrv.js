@@ -18,6 +18,13 @@ var Service = function (redis) {
     updateTimer: null,
 
 
+    // Get unixtime (seconds)
+    ut: function () {
+      return Math.floor(Date.now() / 1000);
+    },
+
+
+    // Get UTC timestamp
     timestamp: function () {
       var d = new Date();
       var month = d.getUTCMonth();
@@ -28,65 +35,53 @@ var Service = function (redis) {
       return String(d.getUTCFullYear()) + String(month) + String(d.getUTCDate()) + String(d.getUTCHours()) + String(d.getUTCMinutes()) + String(d.getUTCSeconds());
     },
 
- /*
-    scan: function (name, cursor) {
-      var that = this;
-      redis.scan(
-        cursor,
-        'MATCH', 'point_' + name + '_*',
-//        'COUNT', config.source.expireSec,
-        'SORT', 'ASC',
-//        'TTL': 10,
-        function (err, res) {
-            if (err) throw err;
 
-            // Update the cursor position for the next scan
-
-            // get the SCAN result for this iteration
-            var keys = res[1];
-
-            console.log('scanned keys: ', keys);
-
-            // Remember: more or less than COUNT or no keys may be returned
-            // See http://redis.io/commands/scan#the-count-option
-            // Also, SCAN may return the same key multiple times
-            // See http://redis.io/commands/scan#scan-guarantees
-            // Additionally, you should always have the code that uses the keys
-            // before the code checking the cursor.
-            if (keys.length > 0) {
-                console.log('Array of matching keys', keys);
-            }
-
-            // It's important to note that the cursor and returned keys
-            // vary independently. The scan is never complete until redis
-            // returns a non-zero cursor. However, with MATCH and large
-            // collections, most iterations will return an empty keys array.
-
-            // Still, a cursor of zero DOES NOT mean that there are no keys.
-            // A zero cursor just means that the SCAN is complete, but there
-            // might be one last batch of results to process.
-
-            // From <http://redis.io/commands/scan>:
-            // 'An iteration starts when the cursor is set to 0,
-            // and terminates when the cursor returned by the server is 0.'
-            if (res[0] === '0') {
-                return true;
-            }
-
-            return keys; // that.scan(name, res[0]);
-        }
-    },
- */
-
-    // get latest points by name
+    // Get latest points by asset name
+    // TODO: Save to redis for 1 sec
     list: function (name, cb) {
-      var that = this;
+      var asset = _.find(config.assets, function(o) { return name == o.name; });
+      if (!asset) {
+        cb('Invalid name');
+        return;
+      }
 
-      // redis.scan('point_' + name, cb);
-      //   this.scan(name, cb);
-      cb();
+      var minUt = String(this.ut() - config.pointsFilterSec);
+      var diffLen = String(config.pointsFilterSec).length;
+      var keyFilter = 'point_' + name + '_' + (minUt).substr(0, minUt.length - diffLen)  + '*';
+      redis.keys(keyFilter, function (err, keys) {
+          if (err) {
+            cb(err);
+          }
+          else {
 
-      // var keys = redis.keys()
+          var list = [];
+          _(keys).forEach(function(key) {
+            var keyUt = String(key).match(/_(\d+)$/)[1];
+            if (keyUt >= minUt) {
+              list.push(key);
+            }
+          });
+
+          redis.mget(list, function (err, res) {
+            if (err) {
+              cb(err);
+            }
+            else {
+
+              var points = [];
+              _(res).forEach(function(point) {
+                var p = JSON.parse(point);
+                p.assetName = name;
+                p.assetId = asset.id;
+                points.push(p);
+              });
+
+              points = _.sortBy(points, function(p) { return p.time; });
+              cb(null, points);
+            }
+          });
+        }
+      });
     },
 
 
@@ -94,12 +89,11 @@ var Service = function (redis) {
     update: function (cb) {
       this.parse(function (err, rates, ut) {
         if (!err && rates) {
-          console.log('Add points:');
           _(rates).forEach(function(value, name) {
             var pointKey = "point_" + name + "_" + ut;
-            redis.set(pointKey, value);
+            var pointValue = {time: ut, value: value};
+            redis.set(pointKey, JSON.stringify(pointValue));
             redis.expire(pointKey, config.source.expireSec);
-            console.log(pointKey);
           });
         }
 
@@ -110,10 +104,11 @@ var Service = function (redis) {
     },
 
 
-    // Get latest rates
+    // Parse latest rates
+    // TODO: Use more advanced math lib, check: ( 0.73699 + 0.73707 ) / 2 =  0.7370300000000001
     parse: function (cb) {
 
-      var ut = Math.floor(Date.now() / 1000);
+      var ut = this.ut();
       fetch(config.source.url + this.timestamp() + '&_=' + String(ut))
       .then(function(res) {
           return res.text();
@@ -127,9 +122,8 @@ var Service = function (redis) {
             cb('Wrong response');
           }
           else {
-            // Count rates
+
             var rates = {};
-            // Use more advanced math lib, check: ( 0.73699 + 0.73707 ) / 2 =  0.7370300000000001
             _(result.Rates).forEach(function(rate) {
               var value = (parseFloat(rate.Bid) + parseFloat(rate.Ask)) / 2;
               rates[rate.Symbol] = parseFloat(value.toFixed(config.source.roundAccuracy));
@@ -144,8 +138,9 @@ var Service = function (redis) {
     },
 
 
+    // Start continuous parsing
     initUpdates: function () {
-      var sched = later.parse.recur().every(this.config.updateIntervalSec).second();
+      var sched = later.parse.recur().every(config.updateIntervalSec).second();
       this.updateTimer = later.setInterval(this.update.bind(this), sched);
     }
 

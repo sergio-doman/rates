@@ -4,7 +4,7 @@ var config = {
     "PORT": process.env.PORT || 8080
   },
 
-  // "filterPointsTimeout": 30,
+  "pointsFilterSec": 30, // How many old points to show
   "updateIntervalSec": 1,
 
   "source": {
@@ -27,11 +27,11 @@ var config = {
     "APP": {
       "host": "localhost",
       "port": "6379",
-      "db": 0
+      "db": 1
     }
   },
 
-  "actives": [
+  "assets": [
     { "id": 1, "title": "EUR to USD", "name": "EURUSD" },
     { "id": 2, "title": "USD to JPU", "name": "USDJPY" },
     { "id": 3, "title": "GPB to USD", "name": "GBPUSD" },
