@@ -14,23 +14,17 @@
           return;
         }
 
-        this.assets = [];
-        this.assetId = null;
         this.socket = io();
-        this.history = [];
 
         this.socket.on('assets', function(message) {
-          this.assets = message.assets;
           console.log('assets', message);
         }.bind(this));
 
         this.socket.on('point', function(message) {
-
           console.log('point', message);
         }.bind(this));
 
         this.socket.on('asset_history', function(message) {
-          this.history = message.points;
           console.log('asset_history', message);
         }.bind(this));
 
@@ -39,7 +33,6 @@
         }.bind(this);
 
         this.subscribeTo = function (assetId) {
-          this.history = [];
           this.socket.emit('subscribe', {message: {assetId: assetId}});
         }
 
